@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
                   tick={{ fill: "#23272e99", fontSize: 12 }}
                 />
                 <Tooltip content={<DailyTooltip />} cursor={{ fill: GRID_SOFT, opacity: 0.5 }} />
-                <Bar dataKey="reservations" fill={CHART_BLUE} radius={[4, 4, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="reservations" fill={CHART_BLUE} radius={[4, 4, 0, 0]} isAnimationActive={false} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -195,7 +195,7 @@ export default function AdminDashboardPage() {
                   tick={{ fill: "#23272e99", fontSize: 12 }}
                 />
                 <Tooltip content={<OccupancyTooltip />} cursor={{ fill: GRID_SOFT, opacity: 0.5 }} />
-                <Bar dataKey="pct" fill={CHART_BLUE} radius={[4, 4, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="pct" fill={CHART_BLUE} radius={[4, 4, 0, 0]} isAnimationActive={false} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -218,7 +218,7 @@ export default function AdminDashboardPage() {
                   tick={{ fill: "#23272e99", fontSize: 12 }}
                 />
                 <Tooltip content={<HoursTooltip />} cursor={{ fill: GRID_SOFT, opacity: 0.5 }} />
-                <Bar dataKey="reservations" fill={CHART_BLUE} radius={[4, 4, 0, 0]} maxBarSize={36} />
+                <Bar dataKey="reservations" fill={CHART_BLUE} radius={[4, 4, 0, 0]} isAnimationActive={false} maxBarSize={36} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>

@@ -8,7 +8,8 @@ Full-stack reservation and menu system for a restaurant: customers browse the me
 
 > ⏱ The API runs on Render's free tier and sleeps after inactivity — the first request can take ~50 s to wake it.
 
-> 📸 _Screenshot pending._
+![Public menu](docs/menu.png)
+
 
 ## Stack
 
@@ -19,6 +20,7 @@ Full-stack reservation and menu system for a restaurant: customers browse the me
 | Database | PostgreSQL (Supabase) + Prisma 7 | Typed queries generated from one schema file; migrations as reviewable SQL |
 | Validation | Zod | One schema validates and types each endpoint's input; the form renders the field errors it returns |
 | Auth | JWT + bcryptjs | Stateless sessions for a single-admin panel |
+| Charts | Recharts | Declarative React charts for the analytics dashboard |
 
 ## Technical decisions
 
@@ -26,6 +28,25 @@ Full-stack reservation and menu system for a restaurant: customers browse the me
 - **Prisma 7 with driver adapters.** CLI config in `prisma.config.ts`, client generated as TypeScript into `src/generated/`, connecting through the standard `pg` driver. Migrations use Supabase's direct connection; the app runs through the transaction pooler.
 - **The server is the only validator.** The client does cheap UX guards (required fields, date minimums, selects that only offer valid values), but every rule lives in Zod on the server, and 400/409 responses carry per-field messages the form renders directly.
 - **Admin panel protected by JWT.** bcrypt-hashed credentials, identical 401s for wrong email vs wrong password (no user enumeration), 12-hour tokens, and route-level `requireAuth` middleware — the client's route guard is UX, not security.
+
+## Analytics dashboard
+
+The admin panel includes a business dashboard (`/admin/dashboard`): headline stats, reservations per day, occupancy per day and bookings per time slot, all driven by a date-range picker.
+
+![Analytics dashboard](docs/dashboard.png)
+
+**Endpoints** (all behind the JWT middleware, all taking `?from=YYYY-MM-DD&to=YYYY-MM-DD`):
+
+- `GET /api/stats/summary` — totals: reservations, covers, cancellation rate, average party size
+- `GET /api/stats/daily` — reservations + covers per day (zero-filled for charting)
+- `GET /api/stats/hours` — bookings grouped by time slot
+- `GET /api/stats/occupancy` — per-day booked table-slots vs capacity
+
+**Technical decisions:**
+
+- **All aggregation happens in PostgreSQL** via Prisma `groupBy`/`aggregate` — the API returns constant-size results (3 status rows, ≤366 day rows) no matter how much history exists, instead of shipping N reservations to count in JS.
+- **Occupancy is the availability logic in reverse:** capacity = tables × time slots, and each active reservation consumes exactly one table-slot — the same invariant the booking transaction enforces, so occupancy is structurally capped at 100%.
+- **The chart library never reaches public visitors:** the dashboard route is lazy-loaded, so Recharts ships as its own chunk (~356 kB) that only downloads after an admin logs in.
 
 ## Run it locally
 

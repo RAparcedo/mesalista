@@ -8,7 +8,7 @@ Sistema full-stack de reservas y carta para un restaurante: los clientes consult
 
 > ⏱ La API corre en el plan gratuito de Render y se duerme tras un rato de inactividad — la primera petición puede tardar ~50 s en despertarla.
 
-> 📸 _Captura de pantalla pendiente._
+![Carta pública](docs/menu.png)
 
 ## Stack
 
@@ -19,6 +19,7 @@ Sistema full-stack de reservas y carta para un restaurante: los clientes consult
 | Base de datos | PostgreSQL (Supabase) + Prisma 7 | Consultas tipadas generadas desde un único esquema; migraciones como SQL revisable |
 | Validación | Zod | Un esquema valida y tipa la entrada de cada endpoint; el formulario pinta los errores de campo que devuelve |
 | Auth | JWT + bcryptjs | Sesiones sin estado para un panel de administrador único |
+| Gráficas | Recharts | Gráficas declarativas en React para el panel de análisis |
 
 ## Decisiones técnicas
 
@@ -26,6 +27,25 @@ Sistema full-stack de reservas y carta para un restaurante: los clientes consult
 - **Prisma 7 con driver adapters.** Configuración del CLI en `prisma.config.ts`, cliente generado como TypeScript en `src/generated/`, conectando a través del driver estándar `pg`. Las migraciones usan la conexión directa de Supabase; la aplicación pasa por el transaction pooler.
 - **El servidor es el único validador.** El cliente hace guardas de UX baratas (campos obligatorios, fecha mínima, selects que solo ofrecen valores válidos), pero cada regla vive en Zod en el servidor, y las respuestas 400/409 llevan mensajes por campo que el formulario pinta directamente.
 - **Panel de administración protegido con JWT.** Credenciales con hash bcrypt, 401 idéntico para email o contraseña incorrectos (sin enumeración de usuarios), tokens de 12 horas y middleware `requireAuth` a nivel de ruta — la guarda de ruta del cliente es UX, no seguridad.
+
+## Panel de análisis
+
+El panel de administración incluye un dashboard de negocio (`/admin/dashboard`): cifras clave, reservas por día, ocupación por día y reservas por turno, todo gobernado por un selector de rango de fechas.
+
+![Panel de análisis](docs/dashboard.png)
+
+**Endpoints** (todos tras el middleware JWT, todos con `?from=AAAA-MM-DD&to=AAAA-MM-DD`):
+
+- `GET /api/stats/summary` — totales: reservas, comensales, tasa de cancelación, personas por reserva
+- `GET /api/stats/daily` — reservas + comensales por día (con días a cero incluidos para las gráficas)
+- `GET /api/stats/hours` — reservas agrupadas por turno
+- `GET /api/stats/occupancy` — mesas-turno ocupadas frente a capacidad, por día
+
+**Decisiones técnicas:**
+
+- **Toda la agregación ocurre en PostgreSQL** vía `groupBy`/`aggregate` de Prisma — la API devuelve resultados de tamaño constante (3 filas de estado, ≤366 filas de días) da igual cuánto histórico exista, en lugar de enviar N reservas para contarlas en JS.
+- **La ocupación es la lógica de disponibilidad al revés:** capacidad = mesas × turnos, y cada reserva activa consume exactamente una mesa-turno — la misma invariante que garantiza la transacción de reserva, así que la ocupación no puede superar el 100%.
+- **La librería de gráficas nunca llega a los visitantes:** la ruta del dashboard se carga con lazy loading, así que Recharts viaja en su propio chunk (~356 kB) que solo se descarga tras iniciar sesión como admin.
 
 ## Ejecutarlo en local
 
