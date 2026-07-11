@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { MAX_PARTY_SIZE, TIME_SLOTS } from "../config/slots";
 
-// Validates the body of POST /api/reservations.
-// Anything that fails here never reaches the database.
+// Shape-level validation for POST /api/reservations. The rules that depend
+// on the restaurant's settings (real time slots, party size cap) are checked
+// in the controller against the database — they're data, not code.
 export const createReservationSchema = z.object({
   customerName: z
     .string()
@@ -22,12 +22,11 @@ export const createReservationSchema = z.object({
       const today = new Date().toLocaleDateString("sv-SE"); // sv-SE = YYYY-MM-DD
       return value >= today;
     }, "La fecha no puede ser en el pasado"),
-  time: z.enum(TIME_SLOTS, "Elige un horario disponible"),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Formato de hora inválido (HH:MM)"),
   partySize: z
     .number()
     .int("El número de personas debe ser un entero")
-    .min(1, "Mínimo 1 persona")
-    .max(MAX_PARTY_SIZE, `Máximo ${MAX_PARTY_SIZE} personas — para grupos grandes, llámanos`),
+    .min(1, "Mínimo 1 persona"),
 });
 
 export type CreateReservationInput = z.infer<typeof createReservationSchema>;

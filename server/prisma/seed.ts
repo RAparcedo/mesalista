@@ -166,6 +166,18 @@ async function main() {
     ],
   });
 
+  // Default opening hours — only created if missing, so re-seeding never
+  // overwrites hours the owner has customised in the admin panel.
+  await prisma.settings.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      timeSlots: ["13:00", "13:30", "14:00", "14:30", "15:00", "20:00", "20:30", "21:00", "21:30", "22:00"],
+      maxPartySize: 6,
+    },
+  });
+
   // Admin user — credentials come from .env, never from code.
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;

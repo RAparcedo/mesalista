@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { Prisma } from "../generated/prisma/client";
 import { bookTable } from "../services/availability";
+import { getSettings } from "../services/settings";
 import { createReservationSchema } from "../validation/reservation.schema";
 
 function isWriteConflict(error: unknown): boolean {
@@ -19,6 +20,22 @@ export async function createReservation(req: Request, res: Response) {
       error: "Datos inválidos",
       fields: z.flattenError(result.error).fieldErrors,
     });
+    return;
+  }
+
+  // Rules that live in the database: the restaurant's actual slots and cap.
+  const settings = await getSettings();
+  const settingsErrors: Record<string, string[]> = {};
+  if (!settings.timeSlots.includes(result.data.time)) {
+    settingsErrors.time = ["Elige un horario disponible"];
+  }
+  if (result.data.partySize > settings.maxPartySize) {
+    settingsErrors.partySize = [
+      `Máximo ${settings.maxPartySize} personas — para grupos grandes, llámanos`,
+    ];
+  }
+  if (Object.keys(settingsErrors).length > 0) {
+    res.status(400).json({ error: "Datos inválidos", fields: settingsErrors });
     return;
   }
 

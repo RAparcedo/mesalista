@@ -6,6 +6,8 @@ import { authRouter } from "./routes/auth.routes";
 import { dishRouter } from "./routes/dish.routes";
 import { menuRouter } from "./routes/menu.routes";
 import { reservationRouter } from "./routes/reservation.routes";
+import { settingsRouter } from "./routes/settings.routes";
+import { tableRouter } from "./routes/table.routes";
 
 const app = express();
 
@@ -21,6 +23,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/dishes", dishRouter);
 app.use("/api/menu", menuRouter);
 app.use("/api/reservations", reservationRouter);
+app.use("/api/settings", settingsRouter);
+app.use("/api/tables", tableRouter);
 
 // Express 5 forwards rejected promises here automatically.
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

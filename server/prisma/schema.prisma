@@ -60,6 +60,16 @@ model Reservation {
   @@index([date, time]) // availability checks and "today's reservations" hit this
 }
 
+// ---------- Restaurant settings ----------
+
+// Single row (id = 1): the owner's bookable time slots and party size cap.
+// In code these were constants; as data, each restaurant sets its own hours.
+model Settings {
+  id           Int      @id @default(1)
+  timeSlots    String[] // ["13:00", "13:30", ...]
+  maxPartySize Int
+}
+
 // ---------- Admin ----------
 
 model AdminUser {
