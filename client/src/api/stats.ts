@@ -44,3 +44,14 @@ export function getDaily(range: DateRange): Promise<DailyPoint[]> {
 export function getHours(range: DateRange): Promise<HourPoint[]> {
   return apiGet<HourPoint[]>(`/api/stats/hours${query(range)}`, true);
 }
+
+export interface OccupancyPoint {
+  date: string;
+  booked: number; // table-slots taken
+  capacity: number; // tables × slots
+  occupancy: number; // 0..1
+}
+
+export function getOccupancy(range: DateRange): Promise<OccupancyPoint[]> {
+  return apiGet<OccupancyPoint[]>(`/api/stats/occupancy${query(range)}`, true);
+}

@@ -10,8 +10,14 @@ import {
   YAxis,
 } from "recharts";
 import { ApiError } from "../api/client";
-import { getDaily, getSummary } from "../api/stats";
-import type { DailyPoint, DateRange, StatsSummary } from "../api/stats";
+import { getDaily, getHours, getOccupancy, getSummary } from "../api/stats";
+import type {
+  DailyPoint,
+  DateRange,
+  HourPoint,
+  OccupancyPoint,
+  StatsSummary,
+} from "../api/stats";
 import { useAuth } from "../context/AuthContext";
 import { daysAgoISO, todayISO } from "../lib/dates";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -33,14 +39,18 @@ export default function AdminDashboardPage() {
   const [range, setRange] = useState<DateRange>({ from: daysAgoISO(29), to: todayISO() });
   const [summary, setSummary] = useState<StatsSummary | null>(null);
   const [daily, setDaily] = useState<DailyPoint[]>([]);
+  const [hours, setHours] = useState<HourPoint[]>([]);
+  const [occupancy, setOccupancy] = useState<OccupancyPoint[]>([]);
   const [status, setStatus] = useState<"loading" | "error" | "success">("loading");
 
   const fetchStats = useCallback(() => {
     setStatus("loading");
-    Promise.all([getSummary(range), getDaily(range)])
-      .then(([summaryData, dailyData]) => {
+    Promise.all([getSummary(range), getDaily(range), getHours(range), getOccupancy(range)])
+      .then(([summaryData, dailyData, hoursData, occupancyData]) => {
         setSummary(summaryData);
         setDaily(dailyData);
+        setHours(hoursData);
+        setOccupancy(occupancyData);
         setStatus("success");
       })
       .catch((error) => {
@@ -137,43 +147,111 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Daily chart */}
-          <div className="mt-6 rounded-xl border border-azulejo-soft bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-medium text-ink/70">Reservas por día</h2>
-            {status === "loading" ? (
-              <div className="mt-3 h-64 animate-pulse rounded-md bg-azulejo-soft/50" />
-            ) : isEmpty ? (
-              <p className="flex h-64 items-center justify-center text-sm text-ink/50">
-                Sin datos en este rango.
-              </p>
-            ) : (
-              <div className="mt-3 h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={daily} margin={{ top: 8, right: 8, bottom: 0, left: -24 }}>
-                    <CartesianGrid vertical={false} stroke={GRID_SOFT} />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={shortDate}
-                      tickLine={false}
-                      axisLine={false}
-                      interval="preserveStartEnd"
-                      tick={{ fill: "#23272e99", fontSize: 12 }}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fill: "#23272e99", fontSize: 12 }}
-                    />
-                    <Tooltip content={<DailyTooltip />} cursor={{ fill: GRID_SOFT, opacity: 0.5 }} />
-                    <Bar dataKey="reservations" fill={CHART_BLUE} radius={[4, 4, 0, 0]} maxBarSize={28} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
+          <ChartCard title="Reservas por día" loading={status === "loading"} empty={isEmpty}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={daily} margin={{ top: 8, right: 8, bottom: 0, left: -24 }}>
+                <CartesianGrid vertical={false} stroke={GRID_SOFT} />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={shortDate}
+                  tickLine={false}
+                  axisLine={false}
+                  interval="preserveStartEnd"
+                  tick={{ fill: "#23272e99", fontSize: 12 }}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#23272e99", fontSize: 12 }}
+                />
+                <Tooltip content={<DailyTooltip />} cursor={{ fill: GRID_SOFT, opacity: 0.5 }} />
+                <Bar dataKey="reservations" fill={CHART_BLUE} radius={[4, 4, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          {/* Occupancy: bounded rate, so the axis is the honest 0-100% */}
+          <ChartCard title="Ocupación por día" loading={status === "loading"} empty={isEmpty}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={occupancy.map((d) => ({ ...d, pct: d.occupancy * 100 }))}
+                margin={{ top: 8, right: 8, bottom: 0, left: -16 }}
+              >
+                <CartesianGrid vertical={false} stroke={GRID_SOFT} />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={shortDate}
+                  tickLine={false}
+                  axisLine={false}
+                  interval="preserveStartEnd"
+                  tick={{ fill: "#23272e99", fontSize: 12 }}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tickFormatter={(v: number) => `${v}%`}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#23272e99", fontSize: 12 }}
+                />
+                <Tooltip content={<OccupancyTooltip />} cursor={{ fill: GRID_SOFT, opacity: 0.5 }} />
+                <Bar dataKey="pct" fill={CHART_BLUE} radius={[4, 4, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          {/* Hours chart */}
+          <ChartCard title="Reservas por turno" loading={status === "loading"} empty={isEmpty}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={hours} margin={{ top: 8, right: 8, bottom: 0, left: -24 }}>
+                <CartesianGrid vertical={false} stroke={GRID_SOFT} />
+                <XAxis
+                  dataKey="time"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#23272e99", fontSize: 12 }}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#23272e99", fontSize: 12 }}
+                />
+                <Tooltip content={<HoursTooltip />} cursor={{ fill: GRID_SOFT, opacity: 0.5 }} />
+                <Bar dataKey="reservations" fill={CHART_BLUE} radius={[4, 4, 0, 0]} maxBarSize={36} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
         </>
       )}
     </>
+  );
+}
+
+function ChartCard({
+  title,
+  loading,
+  empty,
+  children,
+}: {
+  title: string;
+  loading: boolean;
+  empty: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mt-6 rounded-xl border border-azulejo-soft bg-white p-4 shadow-sm">
+      <h2 className="text-sm font-medium text-ink/70">{title}</h2>
+      {loading ? (
+        <div className="mt-3 h-64 animate-pulse rounded-md bg-azulejo-soft/50" />
+      ) : empty ? (
+        <p className="flex h-64 items-center justify-center text-sm text-ink/50">
+          Sin datos en este rango.
+        </p>
+      ) : (
+        <div className="mt-3 h-64">{children}</div>
+      )}
+    </div>
   );
 }
 
@@ -202,6 +280,51 @@ function StatCard({
 
 function shortDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+}
+
+function OccupancyTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: { payload: OccupancyPoint & { pct: number } }[];
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  const point = payload[0].payload;
+  const fullDate = new Date(point.date).toLocaleDateString("es-ES", {
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+  });
+  return (
+    <div className="rounded-md border border-azulejo-soft bg-white px-3 py-2 text-sm shadow-sm">
+      <p className="font-medium text-ink">{fullDate}</p>
+      <p className="mt-1 flex items-center gap-1.5 text-ink/70">
+        <span aria-hidden className="inline-block size-2.5 rounded-xs" style={{ background: CHART_BLUE }} />
+        {point.booked} de {point.capacity} mesas-turno ({Math.round(point.pct)}%)
+      </p>
+    </div>
+  );
+}
+
+function HoursTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: { payload: HourPoint }[];
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  const point = payload[0].payload;
+  return (
+    <div className="rounded-md border border-azulejo-soft bg-white px-3 py-2 text-sm shadow-sm">
+      <p className="font-medium text-ink">Turno de las {point.time}</p>
+      <p className="mt-1 flex items-center gap-1.5 text-ink/70">
+        <span aria-hidden className="inline-block size-2.5 rounded-xs" style={{ background: CHART_BLUE }} />
+        {point.reservations} reservas · {point.covers} comensales
+      </p>
+    </div>
+  );
 }
 
 // Custom tooltip: full date plus both measures. Text wears text colors;
