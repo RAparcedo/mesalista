@@ -1,6 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/db/prisma";
+import { seedReservations } from "./seedReservations";
 
 // Run with: npx prisma db seed
 // Wipes menu + table data and re-inserts it, so it's safe to run repeatedly.
@@ -191,9 +192,15 @@ async function main() {
     create: { email, passwordHash },
   });
 
+  // Demo reservation history for the analytics dashboard.
+  const reservationCount = await seedReservations(prisma);
+
   const dishes = await prisma.dish.count();
   const tables = await prisma.table.count();
-  console.log(`Seeded ${dishes} dishes in 4 categories, ${tables} tables and admin ${email}.`);
+  console.log(
+    `Seeded ${dishes} dishes in 4 categories, ${tables} tables, ` +
+      `${reservationCount} reservations and admin ${email}.`,
+  );
 }
 
 main()
