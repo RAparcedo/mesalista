@@ -2,9 +2,11 @@
 
 Full-stack reservation and menu system for a restaurant: customers browse the menu and book a table; the owner manages the day's reservations from a protected admin panel.
 
-**Live demo:** _coming soon_ · **API:** _coming soon_
+**Live demo:** [mesalista.vercel.app](https://mesalista.vercel.app) · **API:** [mesalista-76s8.onrender.com/api/menu](https://mesalista-76s8.onrender.com/api/menu)
 
-> 📸 _Screenshot pending — add after first deploy._
+> ⏱ The API runs on Render's free tier and sleeps after inactivity — the first request can take ~50 s to wake it.
+
+> 📸 _Screenshot pending._
 
 ## Stack
 
