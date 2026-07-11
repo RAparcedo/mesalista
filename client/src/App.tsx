@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import { MenuPage } from "./pages/MenuPage";
 import { ReservePage } from "./pages/ReservePage";
@@ -6,6 +7,10 @@ import { AdminLayout } from "./pages/AdminLayout";
 import { AdminPage } from "./pages/AdminPage";
 import { AdminMenuPage } from "./pages/AdminMenuPage";
 import { AdminRestaurantPage } from "./pages/AdminRestaurantPage";
+
+// Code-split: the dashboard pulls in Recharts (~350 kB), so it loads on
+// demand instead of inside the public bundle.
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 
@@ -54,6 +59,14 @@ export default function App() {
             }
           >
             <Route index element={<AdminPage />} />
+            <Route
+              path="dashboard"
+              element={
+                <Suspense fallback={<p className="py-12 text-center text-ink/50">Cargando…</p>}>
+                  <AdminDashboardPage />
+                </Suspense>
+              }
+            />
             <Route path="carta" element={<AdminMenuPage />} />
             <Route path="restaurante" element={<AdminRestaurantPage />} />
           </Route>

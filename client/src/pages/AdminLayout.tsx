@@ -27,6 +27,9 @@ export function AdminLayout() {
             <NavLink to="/admin" end className={tabClass}>
               Reservas
             </NavLink>
+            <NavLink to="/admin/dashboard" className={tabClass}>
+              Análisis
+            </NavLink>
             <NavLink to="/admin/carta" className={tabClass}>
               Carta
             </NavLink>
