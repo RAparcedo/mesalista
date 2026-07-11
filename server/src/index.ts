@@ -8,7 +8,8 @@ import { reservationRouter } from "./routes/reservation.routes";
 
 const app = express();
 
-app.use(cors());
+// Only the frontend's origin may call this API from a browser.
+app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173" }));
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
