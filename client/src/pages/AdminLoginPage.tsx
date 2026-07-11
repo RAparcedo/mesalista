@@ -41,7 +41,10 @@ export function AdminLoginPage() {
         <h1 className="mt-2 font-display text-3xl font-semibold text-azulejo">Iniciar sesión</h1>
       </header>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-5 rounded-xl border border-azulejo-soft bg-white p-6 shadow-sm"
+      >
         <div>
           <label htmlFor="email" className="text-sm font-medium">
             Email

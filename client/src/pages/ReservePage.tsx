@@ -6,6 +6,7 @@ import type { Settings } from "../api/settings";
 import { ApiError } from "../api/client";
 import type { Reservation } from "../types";
 import { todayISO } from "../lib/dates";
+import { TileDivider } from "../components/TileDivider";
 
 export function ReservePage() {
   // The restaurant's real slots and party cap come from the API — the
@@ -102,17 +103,24 @@ export function ReservePage() {
 
   return (
     <div className="mx-auto max-w-md px-4 pb-16">
-      <header className="py-10 text-center">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-saffron">Reservas</p>
-        <h1 className="mt-2 font-display text-4xl font-semibold text-azulejo">Tu mesa</h1>
-        <p className="mt-3 text-sm text-ink/60">
+      <header className="py-12 text-center">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] text-saffron">Reservas</p>
+        <h1 className="mt-3 font-display text-5xl font-semibold text-azulejo">Tu mesa</h1>
+        <div className="mt-5">
+          <TileDivider />
+        </div>
+        <p className="mt-5 text-sm text-ink/60">
           {settings
             ? `Horarios de ${settings.timeSlots[0]} a ${settings.timeSlots[settings.timeSlots.length - 1]}`
             : "Cargando horarios…"}
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="space-y-5 rounded-xl border border-azulejo-soft bg-white p-6 shadow-sm"
+      >
         <div>
           <label htmlFor="customerName" className="text-sm font-medium">
             Nombre

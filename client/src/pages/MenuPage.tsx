@@ -3,18 +3,22 @@ import { useMenu } from "../hooks/useMenu";
 import { CategorySection } from "../components/CategorySection";
 import { LoadingMenu } from "../components/LoadingMenu";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { TileDivider } from "../components/TileDivider";
 
 export function MenuPage() {
   const { menu, status, retry } = useMenu();
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16">
-      <header className="py-10 text-center">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-saffron">
+      <header className="py-12 text-center">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] text-saffron">
           Cocina de mercado
         </p>
-        <h1 className="mt-2 font-display text-4xl font-semibold text-azulejo">La Carta</h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-ink/60">
+        <h1 className="mt-3 font-display text-5xl font-semibold text-azulejo">La Carta</h1>
+        <div className="mt-5">
+          <TileDivider />
+        </div>
+        <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-ink/60">
           Producto de temporada, recetas de siempre. La carta cambia con el mercado.
         </p>
       </header>
@@ -31,7 +35,7 @@ export function MenuPage() {
       {status === "success" && (
         <>
           {/* Category index — jumps to each section */}
-          <nav aria-label="Categorías" className="sticky top-0 -mx-4 mb-6 bg-paper/95 px-4 py-3 backdrop-blur">
+          <nav aria-label="Categorías" className="sticky top-14 z-10 -mx-4 mb-6 bg-paper/95 px-4 py-3 backdrop-blur">
             <ul className="flex gap-2 overflow-x-auto">
               {menu.map((category) => (
                 <li key={category.id}>
@@ -52,11 +56,11 @@ export function MenuPage() {
             ))}
           </div>
 
-          <div className="mt-14 rounded-lg bg-azulejo px-6 py-8 text-center">
-            <p className="font-display text-xl italic text-white">¿Te quedas a cenar?</p>
+          <div className="mt-14 rounded-xl bg-azulejo px-6 py-10 text-center ring-1 ring-inset ring-white/20">
+            <p className="font-display text-2xl italic text-white">¿Te quedas a cenar?</p>
             <Link
               to="/reservar"
-              className="mt-4 inline-block rounded-md bg-saffron px-6 py-2.5 font-medium text-ink hover:bg-saffron/90 focus:outline-2 focus:outline-offset-2 focus:outline-white"
+              className="mt-5 inline-block rounded-md bg-saffron px-7 py-2.5 font-medium text-ink transition-colors hover:bg-saffron/90 focus:outline-2 focus:outline-offset-2 focus:outline-white"
             >
               Reservar mesa
             </Link>
