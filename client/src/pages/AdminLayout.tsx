@@ -30,6 +30,9 @@ export function AdminLayout() {
             <NavLink to="/admin/carta" className={tabClass}>
               Carta
             </NavLink>
+            <NavLink to="/admin/restaurante" className={tabClass}>
+              Restaurante
+            </NavLink>
           </div>
         </div>
         <button onClick={handleLogout} className="text-sm text-ink/60 underline hover:text-azulejo">

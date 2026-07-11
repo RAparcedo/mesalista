@@ -1,26 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createReservation } from "../api/reservations";
+import { getSettings } from "../api/settings";
+import type { Settings } from "../api/settings";
 import { ApiError } from "../api/client";
 import type { Reservation } from "../types";
 import { todayISO } from "../lib/dates";
 
-// Mirrors server/src/config/slots.ts — no shared package between client
-// and server, so this list is maintained by hand in both places.
-const TIME_SLOTS = [
-  "13:00", "13:30", "14:00", "14:30", "15:00",
-  "20:00", "20:30", "21:00", "21:30", "22:00",
-];
-const MAX_PARTY_SIZE = 6;
-
 export function ReservePage() {
+  // The restaurant's real slots and party cap come from the API — the
+  // owner edits them in the admin panel, so nothing is hardcoded here.
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [form, setForm] = useState({
     customerName: "",
     customerPhone: "",
     date: todayISO(),
-    time: "20:30",
+    time: "",
     partySize: 2,
   });
+
+  useEffect(() => {
+    getSettings().then((loaded) => {
+      setSettings(loaded);
+      // Preselect the first dinner slot (or the first slot there is).
+      const dinner = loaded.timeSlots.find((slot) => slot >= "20:00");
+      setForm((prev) => ({ ...prev, time: dinner ?? loaded.timeSlots[0] ?? "" }));
+    });
+    // On failure settings stays null; the form shows a hint and the server
+    // still validates everything if the user manages to submit.
+  }, []);
   const [sending, setSending] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState("");
@@ -98,7 +106,9 @@ export function ReservePage() {
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-saffron">Reservas</p>
         <h1 className="mt-2 font-display text-4xl font-semibold text-azulejo">Tu mesa</h1>
         <p className="mt-3 text-sm text-ink/60">
-          Comida de 13:00 a 15:00 · Cena de 20:00 a 22:00
+          {settings
+            ? `Horarios de ${settings.timeSlots[0]} a ${settings.timeSlots[settings.timeSlots.length - 1]}`
+            : "Cargando horarios…"}
         </p>
       </header>
 
@@ -158,8 +168,9 @@ export function ReservePage() {
               className={inputClass}
               value={form.time}
               onChange={(e) => update("time", e.target.value)}
+              disabled={!settings}
             >
-              {TIME_SLOTS.map((slot) => (
+              {(settings?.timeSlots ?? []).map((slot) => (
                 <option key={slot} value={slot}>
                   {slot}
                 </option>
@@ -178,8 +189,9 @@ export function ReservePage() {
             className={inputClass}
             value={form.partySize}
             onChange={(e) => update("partySize", Number(e.target.value))}
+            disabled={!settings}
           >
-            {Array.from({ length: MAX_PARTY_SIZE }, (_, i) => i + 1).map((n) => (
+            {Array.from({ length: settings?.maxPartySize ?? 6 }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
                 {n} {n === 1 ? "persona" : "personas"}
               </option>
@@ -196,14 +208,14 @@ export function ReservePage() {
 
         <button
           type="submit"
-          disabled={sending}
+          disabled={sending || !settings}
           className="w-full rounded-md bg-saffron px-6 py-3 font-medium text-ink hover:bg-saffron/90 focus:outline-2 focus:outline-offset-2 focus:outline-azulejo disabled:cursor-not-allowed disabled:opacity-60"
         >
           {sending ? "Enviando…" : "Solicitar reserva"}
         </button>
 
         <p className="text-center text-xs text-ink/50">
-          ¿Más de {MAX_PARTY_SIZE} personas? Llámanos y lo organizamos.
+          ¿Más de {settings?.maxPartySize ?? 6} personas? Llámanos y lo organizamos.
         </p>
       </form>
     </div>

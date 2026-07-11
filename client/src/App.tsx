@@ -5,6 +5,7 @@ import { AdminLoginPage } from "./pages/AdminLoginPage";
 import { AdminLayout } from "./pages/AdminLayout";
 import { AdminPage } from "./pages/AdminPage";
 import { AdminMenuPage } from "./pages/AdminMenuPage";
+import { AdminRestaurantPage } from "./pages/AdminRestaurantPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 
@@ -54,6 +55,7 @@ export default function App() {
           >
             <Route index element={<AdminPage />} />
             <Route path="carta" element={<AdminMenuPage />} />
+            <Route path="restaurante" element={<AdminRestaurantPage />} />
           </Route>
         </Routes>
       </main>
