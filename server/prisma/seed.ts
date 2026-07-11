@@ -1,4 +1,5 @@
 import "dotenv/config";
+import bcrypt from "bcryptjs";
 import { prisma } from "../src/db/prisma";
 
 // Run with: npx prisma db seed
@@ -165,9 +166,22 @@ async function main() {
     ],
   });
 
+  // Admin user — credentials come from .env, never from code.
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) {
+    throw new Error("Set ADMIN_EMAIL and ADMIN_PASSWORD in .env before seeding");
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  await prisma.adminUser.upsert({
+    where: { email },
+    update: { passwordHash },
+    create: { email, passwordHash },
+  });
+
   const dishes = await prisma.dish.count();
   const tables = await prisma.table.count();
-  console.log(`Seeded ${dishes} dishes in 4 categories and ${tables} tables.`);
+  console.log(`Seeded ${dishes} dishes in 4 categories, ${tables} tables and admin ${email}.`);
 }
 
 main()
