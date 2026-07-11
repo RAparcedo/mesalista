@@ -1,5 +1,7 @@
 # MesaLista
 
+_🇪🇸 [Léelo en español](LEEME.md)_
+
 Full-stack reservation and menu system for a restaurant: customers browse the menu and book a table; the owner manages the day's reservations from a protected admin panel.
 
 **Live demo:** [mesalista.vercel.app](https://mesalista.vercel.app) · **API:** [mesalista-76s8.onrender.com/api/menu](https://mesalista-76s8.onrender.com/api/menu)
