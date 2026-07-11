@@ -11,3 +11,4 @@ server/src/generated/
 # Local-only notes and credentials
 pwd/
 DECISIONS.md
+DECISIONS-DASHBOARD.md
