@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../db/prisma";
+import { getSettings } from "../services/settings";
 
 // Every stats endpoint takes ?from=YYYY-MM-DD&to=YYYY-MM-DD.
 // Defaults to the last 30 days (today included).
@@ -114,6 +115,54 @@ export async function daily(req: Request, res: Response) {
   while (cursor <= end) {
     const key = cursor.toISOString().slice(0, 10);
     days.push({ date: key, ...(byDay.get(key) ?? { reservations: 0, covers: 0 }) });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  res.json(days);
+}
+
+// GET /api/stats/occupancy — % of the floor plan booked, per day.
+//
+// The availability logic in reverse: a day's capacity is tables × slots
+// (each table can hold one active reservation per slot — the exact invariant
+// bookTable() enforces), and every non-cancelled reservation consumes one
+// table-slot. occupancy = booked / capacity, structurally capped at 100%.
+export async function occupancy(req: Request, res: Response) {
+  const range = parseRange(req, res);
+  if (!range) return;
+
+  const [tableCount, settings, rows] = await Promise.all([
+    prisma.table.count(),
+    getSettings(),
+    prisma.reservation.groupBy({
+      by: ["date"],
+      where: { ...inRange(range), status: { not: "CANCELLED" } },
+      _count: { _all: true },
+      orderBy: { date: "asc" },
+    }),
+  ]);
+
+  // Capacity uses TODAY's floor plan and hours for the whole range — if the
+  // owner adds a table, historical percentages shift slightly. Storing a
+  // capacity snapshot per day would fix that; not worth it at this scale.
+  const capacity = tableCount * settings.timeSlots.length;
+
+  const bookedByDay = new Map(
+    rows.map((row) => [row.date.toISOString().slice(0, 10), row._count._all]),
+  );
+
+  const days: { date: string; booked: number; capacity: number; occupancy: number }[] = [];
+  const cursor = new Date(range.from);
+  const end = new Date(range.to);
+  while (cursor <= end) {
+    const key = cursor.toISOString().slice(0, 10);
+    const booked = bookedByDay.get(key) ?? 0;
+    days.push({
+      date: key,
+      booked,
+      capacity,
+      occupancy: capacity > 0 ? Number((booked / capacity).toFixed(4)) : 0,
+    });
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
 

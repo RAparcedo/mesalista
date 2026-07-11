@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { daily, hours, summary } from "../controllers/stats.controller";
+import { daily, hours, occupancy, summary } from "../controllers/stats.controller";
 import { requireAuth } from "../middleware/requireAuth";
 
 // Business analytics — owner's eyes only.
@@ -10,3 +10,4 @@ statsRouter.use(requireAuth);
 statsRouter.get("/summary", summary);
 statsRouter.get("/daily", daily);
 statsRouter.get("/hours", hours);
+statsRouter.get("/occupancy", occupancy);
