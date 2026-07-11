@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import { menuRouter } from "./routes/menu.routes";
+import { reservationRouter } from "./routes/reservation.routes";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/menu", menuRouter);
+app.use("/api/reservations", reservationRouter);
 
 // Express 5 forwards rejected promises here automatically.
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
