@@ -54,3 +54,10 @@ export function apiPatch<T>(path: string, body: unknown, auth = false): Promise<
     body: JSON.stringify(body),
   });
 }
+
+export function apiDelete(path: string, auth = false): Promise<void> {
+  return request<void>(path, {
+    method: "DELETE",
+    headers: buildHeaders(auth),
+  });
+}

@@ -2,8 +2,11 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import { MenuPage } from "./pages/MenuPage";
 import { ReservePage } from "./pages/ReservePage";
 import { AdminLoginPage } from "./pages/AdminLoginPage";
+import { AdminLayout } from "./pages/AdminLayout";
 import { AdminPage } from "./pages/AdminPage";
+import { AdminMenuPage } from "./pages/AdminMenuPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useAuth } from "./context/AuthContext";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `border-b-2 pb-0.5 text-sm font-medium transition-colors ${
@@ -11,6 +14,8 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export default function App() {
+  const { isLoggedIn } = useAuth();
+
   return (
     <div className="min-h-screen bg-paper font-sans text-ink">
       <nav className="border-b border-azulejo-soft">
@@ -25,6 +30,11 @@ export default function App() {
             <NavLink to="/reservar" className={navLinkClass}>
               Reservar
             </NavLink>
+            {isLoggedIn && (
+              <NavLink to="/admin" className={navLinkClass}>
+                Admin
+              </NavLink>
+            )}
           </div>
         </div>
       </nav>
@@ -38,10 +48,13 @@ export default function App() {
             path="/admin"
             element={
               <ProtectedRoute>
-                <AdminPage />
+                <AdminLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<AdminPage />} />
+            <Route path="carta" element={<AdminMenuPage />} />
+          </Route>
         </Routes>
       </main>
 

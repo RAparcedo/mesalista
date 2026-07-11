@@ -1,10 +1,12 @@
 import { Navigate } from "react-router-dom";
-import { isLoggedIn } from "../lib/auth";
+import { useAuth } from "../context/AuthContext";
 
-// Redirects to the login page when there's no stored token. The token is
-// still verified by the server on every request — this only improves UX.
+// Redirects to the login page when not logged in. The token is still
+// verified by the server on every request — this only improves UX.
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  if (!isLoggedIn()) {
+  const { isLoggedIn } = useAuth();
+
+  if (!isLoggedIn) {
     return <Navigate to="/admin/login" replace />;
   }
   return children;

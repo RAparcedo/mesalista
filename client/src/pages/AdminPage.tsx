@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { listReservations, updateReservationStatus } from "../api/reservations";
-import { clearToken } from "../lib/auth";
+import { useAuth } from "../context/AuthContext";
 import { todayISO } from "../lib/dates";
 import type { Reservation, ReservationStatus } from "../types";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -21,15 +21,16 @@ const statusClass: Record<ReservationStatus, string> = {
 
 export function AdminPage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [date, setDate] = useState(todayISO());
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [status, setStatus] = useState<"loading" | "error" | "success">("loading");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const handleSessionExpired = useCallback(() => {
-    clearToken();
+    logout();
     navigate("/admin/login");
-  }, [navigate]);
+  }, [logout, navigate]);
 
   const fetchDay = useCallback(() => {
     setStatus("loading");
@@ -63,29 +64,12 @@ export function AdminPage() {
     }
   }
 
-  function logout() {
-    clearToken();
-    navigate("/admin/login");
-  }
-
   const totalGuests = reservations
     .filter((r) => r.status !== "CANCELLED")
     .reduce((sum, r) => sum + r.partySize, 0);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-16">
-      <header className="flex items-end justify-between py-8">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-saffron">
-            Administración
-          </p>
-          <h1 className="mt-1 font-display text-3xl font-semibold text-azulejo">Reservas</h1>
-        </div>
-        <button onClick={logout} className="text-sm text-ink/60 underline hover:text-azulejo">
-          Salir
-        </button>
-      </header>
-
+    <>
       <div className="flex items-center justify-between gap-4">
         <input
           type="date"
@@ -168,6 +152,6 @@ export function AdminPage() {
           </ul>
         )}
       </div>
-    </div>
+    </>
   );
 }

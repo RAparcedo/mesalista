@@ -1,22 +1,28 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { login } from "../api/auth";
-import { setToken } from "../lib/auth";
+import { Navigate, useNavigate } from "react-router-dom";
+import { login as requestLogin } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
+  const { isLoggedIn, login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+
+  // Already logged in? Straight to the panel — no pointless login form.
+  if (isLoggedIn) {
+    return <Navigate to="/admin" replace />;
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSending(true);
     setError("");
     try {
-      const token = await login(email, password);
-      setToken(token);
+      const token = await requestLogin(email, password);
+      login(token);
       navigate("/admin");
     } catch {
       setError("Email o contraseña incorrectos");
