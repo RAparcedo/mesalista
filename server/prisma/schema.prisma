@@ -1,0 +1,70 @@
+// Prisma schema for MesaLista.
+// Models cover the full MVP domain (menu, reservations, admin),
+// even though features are built incrementally.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Menu ----------
+
+model Category {
+  id           Int    @id @default(autoincrement())
+  name         String @unique // "Entrantes", "Principales", ...
+  displayOrder Int // controls order on the menu page
+  dishes       Dish[]
+}
+
+model Dish {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Decimal  @db.Decimal(10, 2) // euros, e.g. 12.50
+  isAvailable Boolean  @default(true) // owner can hide a dish without deleting it
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+}
+
+// ---------- Reservations ----------
+
+model Table {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique // "Mesa 1", "Terraza 2"
+  capacity     Int // max party size it seats
+  reservations Reservation[]
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Reservation {
+  id            Int               @id @default(autoincrement())
+  date          DateTime          @db.Date // the day, no time component
+  time          String // fixed slot as "HH:mm", e.g. "20:30"
+  partySize     Int
+  customerName  String
+  customerPhone String
+  status        ReservationStatus @default(PENDING)
+  table         Table?            @relation(fields: [tableId], references: [id])
+  tableId       Int? // assigned by availability logic on booking
+  createdAt     DateTime          @default(now())
+
+  @@index([date, time]) // availability checks and "today's reservations" hit this
+}
+
+// ---------- Admin ----------
+
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String // bcrypt hash — never the plain password
+  createdAt    DateTime @default(now())
+}
