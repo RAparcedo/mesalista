@@ -1,10 +1,16 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { prisma } from "../db/prisma";
+import { Prisma } from "../generated/prisma/client";
+import { bookTable } from "../services/availability";
 import { createReservationSchema } from "../validation/reservation.schema";
 
-// POST /api/reservations — validate input and create a PENDING reservation.
-// Table assignment / availability checks arrive with the availability logic.
+function isWriteConflict(error: unknown): boolean {
+  // P2034: the Serializable transaction was aborted by a concurrent one.
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034";
+}
+
+// POST /api/reservations — validate, then assign the smallest free table
+// for the slot. 400 = bad input, 409 = slot full.
 export async function createReservation(req: Request, res: Response) {
   const result = createReservationSchema.safeParse(req.body);
 
@@ -16,18 +22,26 @@ export async function createReservation(req: Request, res: Response) {
     return;
   }
 
-  const input = result.data;
+  let reservation;
+  try {
+    reservation = await bookTable(result.data);
+  } catch (error) {
+    if (!isWriteConflict(error)) throw error;
+    // Someone booked at the same instant — retry once against the new state.
+    reservation = await bookTable(result.data);
+  }
 
-  const reservation = await prisma.reservation.create({
-    data: {
-      customerName: input.customerName,
-      customerPhone: input.customerPhone,
-      // "2026-07-15" parses as UTC midnight; @db.Date keeps only the date part.
-      date: new Date(input.date),
-      time: input.time,
-      partySize: input.partySize,
-    },
-  });
+  if (!reservation) {
+    res.status(409).json({
+      error: "Sin disponibilidad",
+      fields: {
+        time: [
+          `No queda mesa para ${result.data.partySize} el día elegido a las ${result.data.time}. Prueba otro horario.`,
+        ],
+      },
+    });
+    return;
+  }
 
   res.status(201).json(reservation);
 }
