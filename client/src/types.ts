@@ -19,6 +19,12 @@ export interface Category {
 
 export type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
 
+export interface RestaurantTable {
+  id: number;
+  name: string;
+  capacity: number;
+}
+
 export interface Reservation {
   id: number;
   date: string; // ISO date
@@ -28,5 +34,6 @@ export interface Reservation {
   customerPhone: string;
   status: ReservationStatus;
   tableId: number | null;
+  table?: RestaurantTable | null; // included by the admin endpoints
   createdAt: string;
 }

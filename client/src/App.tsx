@@ -1,6 +1,9 @@
 import { NavLink, Route, Routes } from "react-router-dom";
 import { MenuPage } from "./pages/MenuPage";
 import { ReservePage } from "./pages/ReservePage";
+import { AdminLoginPage } from "./pages/AdminLoginPage";
+import { AdminPage } from "./pages/AdminPage";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `border-b-2 pb-0.5 text-sm font-medium transition-colors ${
@@ -30,6 +33,15 @@ export default function App() {
         <Routes>
           <Route path="/" element={<MenuPage />} />
           <Route path="/reservar" element={<ReservePage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
 

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { createReservation } from "../api/reservations";
 import { ApiError } from "../api/client";
 import type { Reservation } from "../types";
+import { todayISO } from "../lib/dates";
 
 // Mirrors server/src/config/slots.ts — no shared package between client
 // and server, so this list is maintained by hand in both places.
@@ -11,11 +12,6 @@ const TIME_SLOTS = [
   "20:00", "20:30", "21:00", "21:30", "22:00",
 ];
 const MAX_PARTY_SIZE = 6;
-
-// Local date as YYYY-MM-DD (toISOString would shift the day near midnight).
-function todayISO(): string {
-  return new Date().toLocaleDateString("sv-SE");
-}
 
 export function ReservePage() {
   const [form, setForm] = useState({
