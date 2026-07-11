@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+/* MesaLista design tokens — Tailwind v4 turns these into utilities
+   (bg-paper, text-azulejo, font-display, ...). */
+@theme {
+  --color-paper: #faf8f3;
+  --color-ink: #23272e;
+  --color-azulejo: #2a4d8f;
+  --color-azulejo-soft: #e9eff7;
+  --color-saffron: #e39a1c;
+
+  --font-display: "Libre Bodoni", Georgia, serif;
+  --font-sans: "Archivo", system-ui, sans-serif;
+}
