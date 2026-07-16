@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMenu } from "../hooks/useMenu";
 import { CategorySection } from "../components/CategorySection";
@@ -7,6 +8,18 @@ import { TileDivider } from "../components/TileDivider";
 
 export function MenuPage() {
   const { menu, status, retry } = useMenu();
+
+  // If loading drags on, say why: the free-tier server sleeps when idle
+  // and its cold start can take up to a minute.
+  const [slowLoad, setSlowLoad] = useState(false);
+  useEffect(() => {
+    if (status !== "loading") {
+      setSlowLoad(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowLoad(true), 4000);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16">
@@ -23,7 +36,16 @@ export function MenuPage() {
         </p>
       </header>
 
-      {status === "loading" && <LoadingMenu />}
+      {status === "loading" && (
+        <>
+          {slowLoad && (
+            <p className="mb-6 rounded-md bg-azulejo-soft/60 px-4 py-3 text-center text-sm text-ink/70">
+              El servidor se está despertando — la primera visita puede tardar hasta un minuto.
+            </p>
+          )}
+          <LoadingMenu />
+        </>
+      )}
 
       {status === "error" && (
         <ErrorMessage
